@@ -1,0 +1,504 @@
+package Wumpus;
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Component;
+import java.awt.Dimension;
+import java.awt.Graphics;
+import java.awt.GridLayout;
+import java.awt.Image;
+import java.awt.Point;
+import java.awt.Toolkit;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.ComponentAdapter;
+import java.awt.event.ComponentEvent;
+import java.awt.event.ComponentListener;
+import java.awt.event.WindowListener;
+import java.util.ArrayList;
+
+import javax.swing.BorderFactory;
+import javax.swing.Icon;
+import javax.swing.ImageIcon;
+import javax.swing.JButton;
+import javax.swing.JComponent;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JSplitPane;
+import javax.swing.SwingConstants;
+import javax.swing.Timer;
+import javax.swing.border.BevelBorder;
+
+
+
+class Viewer extends JFrame implements ActionListener {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+	int gridSize = 5;Timer t;
+
+	WumpusWorld world;            
+	boolean hasArrow=true,
+			hasGold = false;
+	int nb=0; 
+	Point Pinit = new Point(gridSize-1,0);
+	boolean readyForPlay = false;
+	Wumpus Wumpus;
+	Dimension Dim = new Dimension(685,550);
+	ArrayList<Integer> planAction = new ArrayList<Integer>();
+	ArrayList<Point> 	planPoint = new ArrayList<Point>();
+	
+	
+	JPanel tabPanel[][] = new JPanel[gridSize][gridSize];
+	private Image agentA,agent, agentO, agentB, agentBO,agentOr, wumpus, pit, brezz, oder, ob, or, orO, orB, orOB	;
+	String path = "src\\images\\";
+	String[][] map;	
+	ArrayList<Point> currentAgentMove;
+	Color color, color2;
+	JFrame fenetre1;
+	JPanel panelGauche;
+	JPanel panelDroite;
+	
+	//JScrollPane jsp;
+	JSplitPane splitPane,splitPane2;
+	JPanel panelboutton;
+	JButton generate,learn,play,can; 
+	JLabel label;
+	JPanel panelgen;
+		
+		
+	Viewer()
+	{		
+		world = new WumpusWorld(gridSize);
+		Wumpus = new Wumpus(world);
+	
+		color = Color.yellow;
+		color2 = Color.blue;
+		currentAgentMove = new ArrayList<Point>();
+		currentAgentMove.add(new Point(gridSize-1, 0));
+		agent  = Toolkit.getDefaultToolkit().getImage(path+"agent.jpg");
+		agentA  =Toolkit.getDefaultToolkit().getImage(path+"agentA.jpg");
+		agentO = Toolkit.getDefaultToolkit().getImage(path+"agentO.jpg");
+		agentB = Toolkit.getDefaultToolkit().getImage(path+"agentB.jpg");
+		agentBO= Toolkit.getDefaultToolkit().getImage(path+"agentBO.jpg");
+		agentOr= Toolkit.getDefaultToolkit().getImage(path+"agentOr.jpg");
+		wumpus = Toolkit.getDefaultToolkit().getImage(path+"wumpus.jpg");
+		pit    = Toolkit.getDefaultToolkit().getImage(path+"pit.jpg");
+		brezz  = Toolkit.getDefaultToolkit().getImage(path+"brezz.jpeg");
+		oder   = Toolkit.getDefaultToolkit().getImage(path+"oder.jpeg");
+		ob     = Toolkit.getDefaultToolkit().getImage(path+"oB.jpg");		
+		or 	   = Toolkit.getDefaultToolkit().getImage(path+"trésor.jpg");
+		orO    = Toolkit.getDefaultToolkit().getImage(path+"orO.jpg");
+		orB    = Toolkit.getDefaultToolkit().getImage(path+"orB.jpg");
+		orOB   = Toolkit.getDefaultToolkit().getImage(path+"orOB.jpg");
+		
+				 		
+		 
+		 panelGauche = new JPanel(new BorderLayout());
+		 panelGauche.setBackground(new Color(255, 255, 255));
+		
+		 panelGauche.setBorder(BorderFactory.createCompoundBorder(
+                 BorderFactory.createTitledBorder("Contents"),
+                 BorderFactory.createEmptyBorder(10,10,10,10)));
+		  label = new JLabel();
+		 panelGauche.add(label);
+		 panelboutton = new JPanel(new BorderLayout());
+		 panelboutton.setSize(50, 100);
+		 generate = new JButton ("<html><body><u>G</u>enerate World</body></html>");
+		 generate.setBounds(200, 15, 170, 25);
+		 generate.addActionListener(this);
+		 panelboutton.add(generate);
+		 
+		 learn = new JButton ("<html><body><u>L</u>earn</body></html>");
+		 learn.setBounds(385, 15, 90, 25);
+		 learn.addActionListener(this);
+		 panelboutton.add(learn);
+		 learn.addActionListener(this);
+		 
+		 play = new JButton ("<html><body><u>P</u>lay</body></html>");
+		 play.setBounds(480, 15, 90, 25);
+		 Icon icon = new ImageIcon(path+"play2.png");
+		// play.setVerticalAlignment(SwingConstants.TOP);  // of text and icon
+		// play.setHorizontalAlignment(SwingConstants.LEFT); // of text and icon
+	    // button.setHorizontalTextPosition(SwingConstants.LEFT); // of text relative to icon
+	    // button.setVerticalTextPosition(SwingConstants.TOP);    // of text relative to icon
+		 play.setVerticalTextPosition(SwingConstants.CENTER);
+		 play.setHorizontalTextPosition(SwingConstants.LEFT);
+	
+		// play.setIcon(icon);
+		  
+		 
+	
+		 play.addActionListener(this);
+		 panelboutton.add(play);
+		 
+		 can = new JButton ("<html><body><u>S</u>top</body></html>");
+		 can.setBounds(575, 15, 90, 25);
+		 can.setEnabled(true);
+		 can.addActionListener(this);
+		 panelboutton.add(can);
+		 can = new JButton ("<html><body><u></u></body></html>");
+		 can.setBounds(575, 15, 0, 25);
+		 can.setEnabled(false);
+		 can.addActionListener(this );
+				
+		 panelboutton.add(can);
+		 
+	
+		 panelDroite = null;
+		 splitPane =null;
+		 splitPane2 =null;
+		 
+		 panelDroite = new JPanel();		  
+		 panelDroite.setBorder(BorderFactory.createCompoundBorder
+						               (BorderFactory.createTitledBorder
+						                ("Wumpus World"),
+						               BorderFactory.createEmptyBorder(1,1,1,1)));          
+		 panelDroite.setLayout(new GridLayout(gridSize,gridSize));
+			  
+			  //on crÃ©Ã© le splitPane avec une separation Horizontal (barre Ã  la vertical)
+		 splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT,panelGauche,panelDroite);
+			  //Place la barre de sÃ©paration a 200 px
+		 splitPane.setDividerLocation(160);
+			  //Permet de placer directement a gauche ou a droite la barre grace a un clic
+		  splitPane.setOneTouchExpandable(true);
+		  //splitPane.res
+		  
+		
+		 generateWorld();
+		 splitPane2 = new JSplitPane(JSplitPane.VERTICAL_SPLIT,splitPane,panelboutton);
+		 
+	  
+		 
+		 
+		 fenetre1 =  new JFrame("Kill The Wumpus");
+		 fenetre1.setBounds(150, 150, 685, 550); 	splitPane2.setDividerLocation(fenetre1.size().height); 
+		 fenetre1.add(splitPane2);
+		 fenetre1.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		 fenetre1.setResizable(true);
+		 fenetre1.setMinimumSize(new Dimension(685,550));
+		 fenetre1.setVisible(true);			
+		 fenetre1.addComponentListener(new ComponentAdapter() {
+		      public void componentResized(ComponentEvent evt) {
+		          Component c = (Component) evt.getSource();
+		          splitPane2.setDividerLocation(fenetre1.size().height-100);//(450);
+		          
+		        }});
+		
+	}
+	
+	public void actionPerformed(ActionEvent e) {
+		JButton b = (JButton)e.getSource();
+		
+		if(b.getText().contains("enerate")){			
+			world= new WumpusWorld(gridSize);
+			Wumpus = new Wumpus(world);
+			RefreshWindow();
+			generateWorld();
+		
+			}
+		else if(b.getText().contains("earn")){			
+			Wumpus.Learn();			
+			readyForPlay = false;
+		}
+		else if(b.getText().contains("lay")){
+			
+			Wumpus.Test();
+			planAction = new ArrayList<Integer>();
+			planAction= Wumpus.planActionInt;
+					
+			label.setSize(100, 500);
+		
+	
+			readyForPlay = true;
+			final ArrayList<Point> array = new ArrayList<Point>(); 
+			array.add(new Point(gridSize-1,0));
+			if(readyForPlay){
+			  try{
+				    t = new Timer(1000, new ActionListener() {
+					Point suiv = new Point(gridSize-1,0);
+						String head="<html><body>";
+					 
+					
+	                   @Override
+	                   public void actionPerformed(ActionEvent evt) {                	   
+	                	
+	                	   switch(planAction.get(nb++)){
+			                	case 0: initCell(new Point(suiv.x,suiv.y));suiv.x--;	MoveAgent(suiv,hasArrow); head += "En Haut <br>";	break;
+			   					case 1: initCell(suiv);	suiv.y++;	MoveAgent(suiv,hasArrow);head += "A Droite  <br>";	break;
+			   					case 2: initCell(suiv); suiv.x++;	MoveAgent(suiv,hasArrow);head += "En Bas  <br>";	break;
+			   					case 3: initCell(suiv); suiv.y--;	MoveAgent(suiv,hasArrow);head += "A Gauche<br>";	break;
+			   					case 4 : hasArrow =false;	head += "Tirer Flèche en Haut  <br>";	break;
+			   					case 5 : hasArrow =false;	head += "Tirer Flèche à Droite<br>";	break;
+			   					case 6 : hasArrow =false;	head += "Tirer Flèche en Bas  <br>";	break;
+			   					case 7 : hasArrow =false;	head += "Tirer Flèche à Gauche <br>";	break;
+			   					case 8:  	{
+			   						hasGold = true;
+			   						map[suiv.x][suiv.y]="";
+			   						panelDroite.remove(suiv.x*gridSize+suiv.y);
+			   						panelDroite.add(new Panneau(agentOr),suiv.x*gridSize+suiv.y);
+			   						RefreshWindow(); 
+			   						break;
+			   						}
+			   					default : break;	
+			   					} 
+	                	   label.setText(head+"</body></html>");
+	                	   if(nb==planAction.size()) {
+	                		   suiv = new Point(gridSize-1,0);
+	                		   t.stop();
+	                		   nb=0;
+	                	   }                	   
+	                   }
+	               });		
+				    
+				    if(readyForPlay)
+	               t.start();
+			  }
+			  catch(Exception ex){  t.stop();System.out.println("Fin Test");}
+			}
+		}
+		
+		else if(b.getText().contains("top")){			
+			readyForPlay = true;
+		}
+		
+		
+       
+	}
+		
+
+	public void generateWorld(){
+		world = new WumpusWorld(gridSize);
+		Wumpus = new Wumpus(world);
+		map =WumpusWorld.map;
+		
+		panelDroite.removeAll();
+		JComponent c = null ;
+		for(int i =0; i<gridSize; i++)
+			for(int j =0; j<gridSize; j++){
+	
+				if(map[i][j].contains("W") )					
+					c = new Panneau(wumpus);
+				
+				else if(map[i][j].equals("A"))
+					c = new Panneau(agentA);
+				else if(map[i][j].equals("AB"))
+					c = new Panneau(agentB);
+				else if(map[i][j].equals("AO"))
+					c = new Panneau(agentO);
+				
+				else if(map[i][j].contains("P"))
+					c = new Panneau(pit);					
+				
+				else if(map[i][j].equals("B")|| map[i][j].equals("BB"))
+					c = new Panneau(brezz);	
+				else if(map[i][j].equals("OB")||map[i][j].equals("OBB"))
+					c = new Panneau(ob);	
+				
+				else if(map[i][j].equals("O"))
+					c = new Panneau(oder);			
+								
+				else if(map[i][j].equals("G"))
+					c = new Panneau(or);		
+				else if(map[i][j].equals("OG"))
+					c = new Panneau(orO);
+				else if(map[i][j].equals("BG") ||map[i][j].equals("BBG")  )
+					c = new Panneau(orB);
+				else if(map[i][j].equals("OBG"))
+					c = new Panneau(orOB);				
+				
+				else{
+					c = new JPanel();
+					c.setBackground(color);
+					((JComponent) c).setBorder(new BevelBorder(BevelBorder.RAISED));
+				}
+			
+				panelDroite.add(c);			
+				//panelDroite.add(c,i*gridSize+j);
+				 
+			}
+		 panelDroite.repaint();
+		 c.repaint();
+		 panelDroite.repaint();
+		  validate();
+		  repaint();
+	}
+	
+	void initCell(Point p){
+	
+		JComponent c = null ;
+		int x = p.x,
+			y= p.y;
+	
+			if(map[x][y].contains("W") )					
+				c = new Panneau(wumpus);		
+		
+			else if(map[x][y].equals("AB"))
+				c = new Panneau(agentB);
+			else if(map[x][y].equals("AO"))
+				c = new Panneau(agentO);
+			
+			else if(map[x][y].contains("P"))
+				c = new Panneau(pit);					
+			
+			else if(map[x][y].equals("B")|| map[x][y].equals("BB"))
+				c = new Panneau(brezz);	
+			else if(map[x][y].equals("OB")||map[x][y].equals("OBB"))
+				c = new Panneau(ob);	
+			
+			else if(map[x][y].equals("O"))
+				c = new Panneau(oder);			
+							
+			else if(map[x][y].equals("G"))
+				c = new Panneau(or);		
+			else if(map[x][y].equals("OG"))
+				c = new Panneau(orO);
+			else if(map[x][y].equals("BG") ||map[x][y].equals("BBG")  )
+				c = new Panneau(orB);
+			else if(map[x][y].equals("OBG"))
+				c = new Panneau(orOB);				
+			
+			else if(map[x][y].equals("A")){
+				
+					c = new JPanel();
+					c.setBackground(color);
+					((JComponent) c).setBorder(new BevelBorder(BevelBorder.RAISED));
+				}					
+			else{
+				c = new JPanel();
+				c.setBackground(color);
+				((JComponent) c).setBorder(new BevelBorder(BevelBorder.RAISED));
+			}
+			
+			panelDroite.remove(x*gridSize+y);
+			panelDroite.add(c,x*gridSize+y);			
+			RefreshWindow();
+	}
+	
+	void MoveAgent(Point p, boolean hasArrow){   //p: point to move it!!
+		
+		JComponent c = null ;
+		int x = p.x,
+			y= p.y;
+	
+			if(map[x][y].contains("W") ){		
+				c = new Panneau(wumpus);
+				System.out.println("Agent kiled by Wumpus");
+				}
+			else if(map[x][y].contains("") )					
+				c = new Panneau(agent);
+			
+			
+		///	else if(map[x][y].equals("AB"))
+		//		c = new Panneau(agentB);
+		//	else if(map[x][y].equals("AO"))
+		//		c = new Panneau(agentO);
+			if(hasGold){
+				c = new Panneau(agentOr);
+			}
+			else if(map[x][y].contains("P"))
+			{		c = new Panneau(pit);
+				System.out.println("Agent fall down in Pit");
+			}
+			else if(map[x][y].equals("B")|| map[x][y].equals("BB"))
+				{System.out.println("Ageggggggggggggggnt k"); c = new Panneau(agentB);}	
+			else if(map[x][y].equals("OB")||map[x][y].equals("OBB"))
+				c = new Panneau(agentBO);	
+			
+			else if(map[x][y].equals("O"))
+				c = new Panneau(agentO);			
+							
+			else if(map[x][y].equals("G"))
+				c = new Panneau(agentOr);		
+			else if(map[x][y].equals("OG"))
+				c = new Panneau(agentOr);
+			else if(map[x][y].equals("BG") ||map[x][y].equals("BBG")  )
+				c = new Panneau(agentOr);
+			else if(map[x][y].equals("OBG"))
+				c = new Panneau(agentOr);				
+			
+		
+			
+			panelDroite.remove(x*gridSize+y);
+			panelDroite.add(c,x*gridSize+y);			
+			RefreshWindow();
+	}
+		
+
+	
+	JComponent getComponent(Point p){
+		JComponent c = null;
+		if( p.x==gridSize-1 && p.y ==0 ){
+			c = new JPanel();
+			c.setBackground(color);
+			((JComponent) c).setBorder(new BevelBorder(BevelBorder.RAISED));
+		}		
+		if(map[p.x][p.y].equals("")){
+			c = new JPanel();
+			c.setBackground(color);
+			c.setBorder(new BevelBorder(BevelBorder.RAISED));				
+			}
+		else if(map[p.x][p.y].equals("B")|| map[p.x][p.y].equals("BB"))
+			c = new Panneau(brezz);	
+		else if(map[p.x][p.y].equals("OB")||map[p.x][p.y].equals("OBB"))
+			c = new Panneau(ob);	
+		
+		else if(map[p.x][p.y].equals("O"))
+			c = new Panneau(oder);			
+						
+		else if(map[p.x][p.y].equals("G"))
+			c = new Panneau(or);		
+		else if(map[p.x][p.y].equals("OG"))
+			c = new Panneau(orO);
+		else if(map[p.x][p.y].equals("BG") ||map[p.x][p.y].equals("BBG")  )
+			c = new Panneau(orB);
+		else if(map[p.x][p.y].equals("OBG"))
+			c = new Panneau(orOB);
+		else c = new JPanel();
+		
+		return c;
+	}
+	
+	public class Panneau extends JPanel {
+		/**
+		 * 
+		 */
+		private static final long serialVersionUID = 1L;
+		Image img;
+		
+		public Panneau(Image img)
+		{
+			this.img=img;	
+		}
+		  public void paintComponent(Graphics g){		   
+			  g.drawImage(img, 0, 0, this.getWidth(), this.getHeight(), this);                
+		  }	
+		  
+		  public void setImage(Image img){//, Graphics g){
+			  this.img=img;
+			  Graphics g = this.getGraphics();
+			  paintComponent( g);//g.drawImage(img, 0, 0, this.getWidth(), this.getHeight(), this);    
+			  revalidate();
+			  repaint();
+		  }		  
+		}
+	void RefreshWindow(){
+		fenetre1.setSize(fenetre1.getWidth()-1, fenetre1.getHeight());
+		fenetre1.setSize(fenetre1.getWidth()+1, fenetre1.getHeight());
+		panelDroite.repaint();
+			
+	}
+
+	
+	
+	
+
+	
+
+
+		  
+			
+	
+	
+}
